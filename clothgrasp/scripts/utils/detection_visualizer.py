@@ -18,6 +18,9 @@ class DetectionVisualizer:
         self.crop_dims = crop_dims
         self.arrow_scale = arrow_scale
 
+    # data including:
+    # rgb_im depth_im prediction image_pred corners outer_edges inner_edges 
+    # py px angle inner_py inner_px variance angle_x angle_y
     def _network_output(self, data, show_grasp):
         rgb_im = data['rgb_im']
         impred = data['image_pred']
@@ -31,6 +34,7 @@ class DetectionVisualizer:
         row_start, row_end, col_start, col_end, step = self.crop_dims
         rgb_im = rgb_im[row_start:row_end:step, col_start:col_end:step, :]
         
+        # plot show
         plt.gcf().clear()
         fig = plt.figure()
         plt.imshow(rgb_im)
@@ -121,9 +125,11 @@ class DetectionVisualizer:
         buf = np.fromstring(fig.canvas.tostring_rgb(), dtype=np.uint8).reshape(h, w, 3)
         return buf
 
+
     def visualize(self, data, show_grasp=True):
         """Plot and publish the data.
         """
+        # buf = XXX
         if self.detection_method == 'groundtruth':
             buf = self._network_output(data, show_grasp)
         elif self.detection_method == 'network':
@@ -140,7 +146,7 @@ class DetectionVisualizer:
             buf = self._rgb_output(data, show_grasp)
         else:
             raise NotImplementedError
-
+        # 将buf格式转换为ROS的ImgMsg格式
         msg = self.bridge.cv2_to_imgmsg(buf, encoding='rgb8')
         self.pub.publish(msg)
         return buf

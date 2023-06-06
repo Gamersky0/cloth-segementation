@@ -10,9 +10,11 @@ base_save_path: /path/to/dir
 # Cloth detection method [groundtruth, network, clothseg, canny, canny_color, harris, harris_color]
 detection_method: groundtruth
 # detection_method: network
+
 # Grasp point selection method [random, manual, confidence, policy]
 grasp_point_method: random
 # grasp_point_method: confidence
+
 # Grasp angle selection method [predict, inneredge, center]
 grasp_angle_method: inneredge
 # grasp_angle_method: inneredge

@@ -70,11 +70,13 @@ class ClothEdgeModel:
         return corners, outer_edges, inner_edges
 
     def predict(self, image):
+        # 切换成评估模式,关闭dropout和batch normalization等
         self.model.eval()
         
         row_start, row_end, col_start, col_end, step = self.crop_dims
-
+        # 图像裁剪
         image = image[row_start:row_end:step, col_start:col_end:step]
+        # 计算二维数组最大值
         max_d = np.nanmax(image)
         image[np.isnan(image)] = max_d
         img_depth = Image.fromarray(image, mode='F')

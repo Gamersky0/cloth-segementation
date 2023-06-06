@@ -88,9 +88,11 @@ class Sawyer():
         return True
 
     def _get_slide_poses(self, cloth_pose):
+        # 获取夹具的方向向量
         v = unit_vector_from_pose(cloth_pose)
         pose = deepcopy(cloth_pose)
 
+        # GPT 检索从夹具末端到机器人末端执行器的距离，然后从绝对位置中减去这个距离以获得机器人末端执行器的位置
         # Transform to tip of end effector
         if rospy.get_param('transform_gripper'):
             self.listener.waitForTransform("right_hand", "right_gripper_tip", rospy.Time(0), rospy.Duration(4.0))
@@ -170,7 +172,8 @@ class Sawyer():
         return plan_length, approach_plan, slide_start_plan
 
     def plan(self, goal):
-        """Plan for both grasp pose and rotated grasp pose 
+        """
+        Plan for both grasp pose and rotated grasp pose 
         """
         cloth_pose = goal.cloth_pose
 
@@ -242,9 +245,11 @@ class Sawyer():
 class GraspActionServer():
     def __init__(self):
         rospy.init_node('grasp_actionserver')
+        # 初始化moveit_commander库
         moveit_commander.roscpp_initialize(['joint_states:=/robot/joint_states'])
         self.robot = Sawyer()
         self.bridge = CvBridge()
+        # 当前节点订阅/rgb/image_raw话题,并定义回调函数_rgb_cb处理接收到的消息.queue_size表示接收并处理的消息队列的长度
         self.rgb_sub = rospy.Subscriber('/rgb/image_raw', Image, self._rgb_cb, queue_size=1)
         self.move_server = actionlib.SimpleActionServer('move_home', MoveHomeAction, self._move_home, False)
         self.move_server.start()

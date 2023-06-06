@@ -14,8 +14,10 @@ from clothgrasp.srv import DetectEdge, SelectGrasp, ProjectGrasp
 
 class ClothGrasper:
     def __init__(self):
+        # 初始化node
         rospy.init_node('clothgrasper')
 
+        # 获取 保存路径 / 抓取目标 / 检测方法
         rospy.set_param('break_on_error', False)
         self.base_path = rospy.get_param('base_save_path')
         self.grasp_target = rospy.get_param('grasp_target')
@@ -163,9 +165,13 @@ class ClothGrasper:
         count = 0
         while not rospy.is_shutdown():
             rospy.loginfo(count)
+            # 边缘检测
             detectedge_response = self._call_detectedge_service()
+            # 抓握选择
             selectgrasp_response = self._call_selectgrasp_service(detectedge_response)
+            # 聚合数据(返回 rgb_im depth_im prediction image_pred corners outer_edges inner_edges py px angle inner_py inner_px variance angle_x angle_y)
             data = self._aggregate_data(detectedge_response, selectgrasp_response)
+            # 可视化
             plot = self.visualizer.visualize(data, show_grasp=True)
             # self._save(data, plot)
             # self._save_train(data, plot, count)

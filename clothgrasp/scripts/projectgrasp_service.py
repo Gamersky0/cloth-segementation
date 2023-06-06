@@ -11,6 +11,7 @@ from pyquaternion import Quaternion as Quat
 from tf.transformations import quaternion_from_matrix
 from copy import deepcopy
 
+# 好像只涉及到坐标系转换, 没有涉及到控制问题(project grasp -> 抓取点映射?)
 class GraspPlanner():
     def __init__(self):
         rospy.init_node('projectgrasp_service')
@@ -28,6 +29,14 @@ class GraspPlanner():
 
         self.server = rospy.Service('project_grasp', ProjectGrasp, self._server_cb)
 
+# 这段代码实现了一个将参数数组 arr 转换为变换矩阵 的函数 _get_tf_from_arr。
+# 具体来说，这里使用了一个名为 Quat 的第三方库来进行旋转矩阵的转换，
+# 将矩阵的前三列设置为了旋转矩阵，将平移向量存储在矩阵的第四列中，并返回该变换矩阵。
+
+# 在该代码中，函数首先从 arr 中获取旋转四元数的参数 x、y、z 和 w，
+# 然后通过调用 Quat 的构造函数生成对应的旋转四元数 q。
+# 通过 q.transformation_matrix 方法获取相应的旋转矩阵，然后将矩阵的前三列设置为该旋转矩阵，
+# 平移向量存储在矩阵的第四列中。最后将变换矩阵返回。
     def _get_tf_from_arr(self, arr):
         q = Quat(x=arr[3], y=arr[4], z=arr[5], w=arr[6])
         tf_mat = q.transformation_matrix
@@ -47,7 +56,8 @@ class GraspPlanner():
         return pose
 
     def _pose_vector(self, pose):
-        """Returns unit pose vector.
+        """
+        Returns unit pose vector.
         """
         q = Quat(w=pose.orientation.w, x=pose.orientation.x, y=pose.orientation.y, z=pose.orientation.z).unit
         unit_v = np.array([0., 0., 1.]) # rotate world frame z axis
@@ -111,6 +121,7 @@ class GraspPlanner():
 
     def _server_cb(self, req):
         rospy.loginfo('Received grasp projection request')
+        # get 深度图像,抓取像素点和倾角
         depth_im = deepcopy(self.bridge.imgmsg_to_cv2(req.depth_im))
         grasp_pt = [req.py, req.px]
         angle = req.angle

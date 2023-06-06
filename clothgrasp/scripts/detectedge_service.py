@@ -1,4 +1,6 @@
+# -*- coding: utf-8 -*-
 #!/usr/bin/env python
+# Request detectedge_service, return Response(rgb_im depth_im prediction corners outer_edges inner_edges)
 import os
 import rospy
 import cv2
@@ -26,6 +28,7 @@ class EdgeDetector():
         rospy.init_node('detectedge_service')
         self.bridge = CvBridge()
         self.detection_method = rospy.get_param('detection_method')
+        # 初始化检测模型
         self._init_model()
 
         self.depth_im = None
@@ -83,11 +86,23 @@ class EdgeDetector():
     def _server_cb(self, req, scale=2):
         rospy.loginfo('Received cloth detection request')
 
+        # 深拷贝 rgb & depth image
         rgb_im = deepcopy(self.rgb_im)
         depth_im = deepcopy(self.depth_im)
         if rgb_im is None or depth_im is None:
             raise rospy.ServiceException('Missing RGB or Depth Image')
 
+        # 这段代码是用于构造 ROS 服务（Service）的返回消息。
+        # 创建了一个名为 DetectEdgeResponse 的服务返回消息，然后将处理后的 rgb_im 和 depth_im 图像转换为 ROS 消息（Message），
+        # 并设置到 DetectEdgeResponse 消息中的 rgb_im 和 depth_im 属性中。
+
+        # # DetectEdgeResponse 包含以下成员变量
+        # sensor_msgs/Image rgb_im
+        # sensor_msgs/Image depth_im
+        # sensor_msgs/Image prediction
+        # sensor_msgs/Image corners
+        # sensor_msgs/Image outer_edges
+        # sensor_msgs/Image inner_edges
         response = DetectEdgeResponse()
         response.rgb_im = self.bridge.cv2_to_imgmsg(rgb_im)
         response.depth_im = self.bridge.cv2_to_imgmsg(depth_im)

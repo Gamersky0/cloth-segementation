@@ -3,8 +3,9 @@ import argparse
 import rospy
 import os
 import cv2
+# ROS
 import actionlib
-import numpy as np
+import numpy as npimport actionlib
 from datetime import datetime
 from cv_bridge import CvBridge
 from sensor_msgs.msg import Image
@@ -38,7 +39,17 @@ class ClothGrasper:
         self.move_client.send_goal(goal)
         self.move_client.wait_for_result()
         return self.move_client.get_result()
-
+    
+    """
+    # request null
+    # return 
+        # sensor_msgs/Image rgb_im
+        # sensor_msgs/Image depth_im
+        # sensor_msgs/Image prediction
+        # sensor_msgs/Image corners
+        # sensor_msgs/Image outer_edges
+        # sensor_msgs/Image inner_edges
+    """
     def _call_detectedge_service(self):
         start = rospy.Time.now()
         rospy.wait_for_service('detect_edges')
@@ -48,6 +59,23 @@ class ClothGrasper:
         rospy.loginfo('Detect secs: %d, nsecs: %d' % (d.secs, d.nsecs))
         return response
 
+    """
+    # request
+        # sensor_msgs/Image rgb
+        # sensor_msgs/Image prediction
+        # sensor_msgs/Image corners
+        # sensor_msgs/Image outer_edges
+        # sensor_msgs/Image inner_edges
+    # response
+        # int64 py
+        # int64 px
+        # float64 angle
+        # int64 inner_py
+        # int64 inner_px
+        # float64[] var
+        # float64[] angle_x
+        # float64[] angle_y
+    """
     def _call_selectgrasp_service(self, detectedge_response):
         start = rospy.Time.now()
         rospy.wait_for_service('select_grasp')
@@ -62,10 +90,27 @@ class ClothGrasper:
         rospy.loginfo('Select Grasp secs: %d, nsecs: %d' % (d.secs, d.nsecs))
         return response
 
+    """
+    # request
+        # sensor_msgs/Image depth_im
+        # int64 py
+        # int64 px
+        # float64 angle 
+    # response
+        # # moveit_msgs/RobotTrajectory[] plans
+        # # bool is_default_angle
+        # geometry_msgs/Pose cloth_pose
+    """
     def _call_projectgrasp_service(self, detectedge_response, selectgrasp_response):
         start = rospy.Time.now()
         rospy.wait_for_service('project_grasp')
         project_grasp = rospy.ServiceProxy('project_grasp', ProjectGrasp)
+        # 这些没有用到
+            # int64 inner_py
+            # int64 inner_px
+            # float64[] var
+            # float64[] angle_x
+            # float64[] angle_y
         depth_im = detectedge_response.depth_im
         py = selectgrasp_response.py
         px = selectgrasp_response.px
@@ -159,26 +204,32 @@ class ClothGrasper:
         np.save(os.path.join(dir_path, 'data.npy'), data)
 
     def run(self):
+        # robot move home
         self._move_home()
 
+        # detectedge \ selectgrasp
         detectedge_response = self._call_detectedge_service()
         selectgrasp_response = self._call_selectgrasp_service(detectedge_response)
         if selectgrasp_response.px == 0 and selectgrasp_response.py == 0:
             rospy.logerr("No cloth detected")
             return False
-
+        # projectgrasp
         projectgrasp_response = self._call_projectgrasp_service(detectedge_response, selectgrasp_response)
 
+        # aggregate_data \ visualize
         data = self._aggregate_data(detectedge_response, selectgrasp_response, projectgrasp_response)
         plot = self.visualizer.visualize(data)
 
+        # execute_grasp
         # projectgrasp_response = None # debug
         grasp_result = self._execute_grasp(projectgrasp_response)
         state = self.grasp_client.get_state()
         self._save(data, plot, state, grasp_result)
 
+        # robot move home
         self._move_home()
 
+# Runs the pipeline to execute a sliding grasp on a cloth.
 if __name__ == '__main__':
     cgs = ClothGrasper()
     cgs.run()

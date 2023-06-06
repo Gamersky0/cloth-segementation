@@ -449,6 +449,7 @@ class GraspSelector():
     """
     Runs service that selects grasps.
     """
+    # 初始化节点,selector
     def __init__(self):
         rospy.init_node('selectgrasp_service')
         self.bridge = CvBridge()
@@ -458,7 +459,9 @@ class GraspSelector():
 
         self.server = rospy.Service('select_grasp', SelectGrasp, self._server_cb)
 
+    # 初始化selecter
     def _init_selector(self):
+        # self.selector = XXX
         if self.detection_method == 'groundtruth':
             self.selector = GroundTruthSelector()
         elif self.detection_method == 'network':
@@ -478,6 +481,22 @@ class GraspSelector():
         else:
             raise NotImplementedError
 
+    # callback function
+    # Requese including:
+        # sensor_msgs/Image rgb
+        # sensor_msgs/Image prediction
+        # sensor_msgs/Image corners
+        # sensor_msgs/Image outer_edges
+        # sensor_msgs/Image inner_edges
+    # Response including:
+        # int64 py
+        # int64 px
+        # float64 angle
+        # int64 inner_py
+        # int64 inner_px
+        # float64[] var
+        # float64[] angle_x
+        # float64[] angle_y
     def _server_cb(self, req):
         rospy.loginfo('Received grasp selection request')
         inner_py = None
