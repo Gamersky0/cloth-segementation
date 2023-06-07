@@ -72,21 +72,25 @@ class ClothEdgeModel:
     def predict(self, image):
         # 切换成评估模式,关闭dropout和batch normalization等
         self.model.eval()
-        
+        # N: 获取 Config， 进行图像裁剪
         row_start, row_end, col_start, col_end, step = self.crop_dims
-        # 图像裁剪
         image = image[row_start:row_end:step, col_start:col_end:step]
-        # 计算二维数组最大值
+
+        # 找到深度图像最大值，将 NAN 也替换成最大值防止出错
         max_d = np.nanmax(image)
         image[np.isnan(image)] = max_d
+        # 将 NumPy 数组转换为 PIL 图像对象
         img_depth = Image.fromarray(image, mode='F')
+        # 将 PIL 图像对象转换为 Pytorch 张量对象
         img_depth = self.transform(img_depth)
 
         min_I = img_depth.min()
         max_I = img_depth.max()
         img_depth[img_depth<=min_I] = min_I
+        # 所有像素归一化，都在 0-1 之间
         img_depth = (img_depth - min_I) / (max_I - min_I)
-        
+        # 与 PyTorch 中的张量格式相对应，将图像张量添加一个维度 (batch size 维度)，以便于将其输入到模型中。
+        # 该维度的大小为 1，因为这里只处理了一张图像
         img_depth = img_depth[np.newaxis, :]
 
         if self.use_gpu:
@@ -97,7 +101,9 @@ class ClothEdgeModel:
         outputs = self.model(inputs)
         outputs = torch.sigmoid(outputs)
         output = outputs.data.cpu().numpy()
+        # 获取输出数组的形状，其中 N 为 batch size，h 和 w 分别为图像的高度和宽度
         N, _, h, w = output.shape
+        # 将 output 进行转置，以便将通道数移动到最后一个维度，即将输出结果转换为 (h, w, C) 的形式，其中 C 表示通道数。由于上面已经获取了 batch size，所以这里取出第一个图像的预测结果，即 output[0]
         pred = output.transpose(0, 2, 3, 1)
         pred = pred[0]
 

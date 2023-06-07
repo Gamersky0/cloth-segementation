@@ -20,14 +20,16 @@ class ClothGrasper:
     """
     def __init__(self):
         rospy.init_node('clothgrasper')
-
+        # ros set param & get param
         rospy.set_param('break_on_error', True)
         self.base_path = rospy.get_param('base_save_path')
         self.grasp_target = rospy.get_param('grasp_target')
         self.detection_method = rospy.get_param('detection_method')
         self.crop_dims = rospy.get_param('crop_dims') if self.detection_method == 'network' or self.detection_method == 'groundtruth' else rospy.get_param('crop_dims_baselines')
 
+        # action client & grasp client
         self.move_client = actionlib.SimpleActionClient('move_home', MoveHomeAction)
+        # wait_for_server()等待move客户端连接到服务器，并在服务器准备就绪时返回
         self.move_client.wait_for_server()
         self.grasp_client = actionlib.SimpleActionClient('execute_grasp', ExecuteGraspAction)
         self.grasp_client.wait_for_server()
@@ -204,7 +206,7 @@ class ClothGrasper:
         np.save(os.path.join(dir_path, 'data.npy'), data)
 
     def run(self):
-        # robot move home
+        # N: robot move home
         self._move_home()
 
         # detectedge \ selectgrasp

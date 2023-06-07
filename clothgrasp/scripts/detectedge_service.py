@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 #!/usr/bin/env python
-# Request detectedge_service, return Response(rgb_im depth_im prediction corners outer_edges inner_edges)
+''' detectedge_service '''
+# Request  (none???)
+# Response (rgb_im depth_im prediction corners outer_edges inner_edges)
 import os
 import rospy
 import cv2
@@ -33,11 +35,13 @@ class EdgeDetector():
 
         self.depth_im = None
         self.rgb_im = None
+        # N: subscriber
         self.depthsub = message_filters.Subscriber('/depth_to_rgb/image_raw', Image)
         self.rgbsub = message_filters.Subscriber('/rgb/image_raw', Image)
 
         self.server = rospy.Service('detect_edges', DetectEdge, self._server_cb)
 
+        # 同步到 _callback 中
         self.ts = message_filters.ApproximateTimeSynchronizer([self.depthsub, self.rgbsub], 10, 0.1)
         self.ts.registerCallback(self._callback)
 
@@ -48,6 +52,12 @@ class EdgeDetector():
         elif self.detection_method == 'network':
             self.crop_dims = rospy.get_param('crop_dims')
             grasp_angle_method = rospy.get_param('grasp_angle_method')
+            
+            # grasp_angle_method 表示程序在计算抓取角度时要使用的方法
+            # 如果 grasp_angle_method 为 'predict'，说明程序要使用的模型是用于预测抓取角度的模型，
+            # 因此 model_path 参数将被替换为 model_angle_path 参数，即程序将使用不同的模型。
+            # 否则，model_path 参数保持不变，程序将使用默认的模型。
+            # 因此，这行代码的作用是根据 grasp_angle_method 的值获取正确的模型路径，并将其保存在 model_path 变量中。
             model_path = rospy.get_param('model_angle_path') if grasp_angle_method == 'predict' else rospy.get_param('model_path')
             self.model = ClothEdgeModel(self.crop_dims, grasp_angle_method, model_path)
         elif self.detection_method == 'clothseg':
@@ -77,10 +87,13 @@ class EdgeDetector():
         else:
             raise NotImplementedError
 
+    # N: set self.depth_im & self.rgb_im
     def _callback(self, depth_msg, rgb_msg):
         depth_im = self.bridge.imgmsg_to_cv2(depth_msg)
         rgb_im = self.bridge.imgmsg_to_cv2(rgb_msg)
+        # N: 将 self.depth_im 中的 NaN 值替换为 0。防止在图像处理中出现 NaN 导致错误
         self.depth_im = np.nan_to_num(depth_im)
+        # N: 将输入的 BGR 图像转换为 RGB 图像
         self.rgb_im = cv2.cvtColor(rgb_im, cv2.COLOR_BGR2RGB)
 
     def _server_cb(self, req, scale=2):
