@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 #!/usr/env/bin python
 import matplotlib
 matplotlib.use('Agg')
@@ -103,7 +104,8 @@ class ClothEdgeModel:
         output = outputs.data.cpu().numpy()
         # 获取输出数组的形状，其中 N 为 batch size，h 和 w 分别为图像的高度和宽度
         N, _, h, w = output.shape
-        # 将 output 进行转置，以便将通道数移动到最后一个维度，即将输出结果转换为 (h, w, C) 的形式，其中 C 表示通道数。由于上面已经获取了 batch size，所以这里取出第一个图像的预测结果，即 output[0]
+        # 将 output 进行转置，将通道数移动到最后一个维度，即将输出结果转换为 (h, w, C) 的形式，其中 C 表示通道数。
+        # 由于上面已经获取了 batch size，所以这里取出第一个图像的预测结果，即 output[0]
         pred = output.transpose(0, 2, 3, 1)
         pred = pred[0]
 
