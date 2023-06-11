@@ -19,7 +19,7 @@ class Visualizer:
 
     def outer_inner_corresp(self, i=None):
         depth = np.load(os.path.join(self.datapath, "%s_depth.npy" % i))
-#         variance = np.load(os.path.join(self.datapath, "%s_variance.npy" % i))
+        # variance = np.load(os.path.join(self.datapath, "%s_variance.npy" % i))
         green = Image.open(os.path.join(self.datapath, "%s_labels_green.png" % i))
         yellow = Image.open(os.path.join(self.datapath, "%s_labels_yellow.png" % i))
         red = Image.open(os.path.join(self.datapath, "%s_labels_red.png" % i))
@@ -53,13 +53,13 @@ class Visualizer:
         closest_inner_px = labels_to_pxs[lbl]
         
         # Visualize a fraction of the correspondences as arrows
-#         factor = 20
-#         plt.figure(dpi=150)
-#         plt.imshow(seg)
-#         plt.quiver(xx_o[::factor], yy_o[::factor], 
-#                    closest_inner_px[yy_o[::factor], xx_o[::factor]][:,1]-xx_o[::factor], 
-#                    -closest_inner_px[yy_o[::factor], xx_o[::factor]][:,0]+yy_o[::factor], 
-#                    color='orange', scale_units='xy', scale=1.0)
+        # factor = 20
+        # plt.figure(dpi=150)
+        # plt.imshow(seg)
+        # plt.quiver(xx_o[::factor], yy_o[::factor], 
+        #            closest_inner_px[yy_o[::factor], xx_o[::factor]][:,1]-xx_o[::factor], 
+        #            -closest_inner_px[yy_o[::factor], xx_o[::factor]][:,0]+yy_o[::factor], 
+        #            color='orange', scale_units='xy', scale=1.0)
         
         # Calculate distance to the closest inner edge point for every pixel in the image
         dist_to_inner = np.zeros(closest_inner_px.shape)
@@ -89,13 +89,13 @@ class Visualizer:
         yy_var = np.var(yy_neighbours,axis = 1)
         var = xx_var+yy_var
         var = var / var.max()
-#         var = (var - var.min()) / (var.max() - var.min())
+        # var = (var - var.min()) / (var.max() - var.min())
         var_map = np.zeros((im_height, im_width))
         for i in range(xx_o.shape[0]): # xx_o is flat
             var_map[yy_o[i]][xx_o[i]] = var[i]
         
         invvar = 1.0 - var # get inverse
-#         pvar = invvar / np.sum(invvar)
+        # pvar = invvar / np.sum(invvar)
         pvar = invvar
         pvar_map = np.zeros((im_height, im_width))
         for i in range(xx_o.shape[0]): # xx_o is flat
@@ -109,13 +109,13 @@ class Visualizer:
         plt.title("New var: %0.5f %0.5f" % (var_map.min(), var_map.max()))
         
         plt.subplot(122)
-#         plt.imshow(pvar_map, vmin=0.0, vmax=1.0)
+        # plt.imshow(pvar_map, vmin=0.0, vmax=1.0)
         plt.imshow(pvar_map, vmin=pvar_map.min(), vmax=pvar_map.max())
         plt.colorbar(fraction=0.046, pad=0.04)
         plt.title("New inv var: %0.5f %0.5f" % (pvar_map.min(), pvar_map.max()))
         plt.show()
         
-#         np.save("/home/jianingq/Downloads/newvar.npy", pvar_map)
+        # np.save("/home/jianingq/Downloads/newvar.npy", pvar_map)
 
     # sample the dataset from index 1, 10, 100
     def sample_dataset(self):
@@ -160,7 +160,7 @@ class Visualizer:
         # model.pred.shape: (1, 255, 243, 3)
             # batch_size, height, witdth, channel，这里应该是去掉了batch_size维度
         out = model.evaluate(depth).squeeze()
-        print("out_after.shape:", out.shape)
+        print("seg_out.shape:", out.shape)
         seg_pred = out[:, :, :3]
         print("seg_pred.shape:", seg_pred.shape)
         
@@ -172,27 +172,31 @@ class Visualizer:
 
         if enable_plt:  
             plt.figure(dpi=300)
+
             plt.subplot(141)
             plt.title("rgb")
             plt.imshow(rgb)
             plt.axis("off")
+
             plt.subplot(142)
-            plt.title("gt seg")
-            plt.imshow(im_gt)
+            plt.title("seg_pred_0")
+            plt.imshow(seg_pred[..., 0])
             plt.axis("off")
+
             plt.subplot(143)
-            plt.title("model raw")
+            plt.title("seg_pred_1")
+            plt.imshow(seg_pred[..., 1])
             plt.axis("off")
-            plt.imshow(seg_pred)
+
             plt.subplot(144)
-            plt.title("model thresh")
-            plt.imshow(seg_pred_th)
-            # plt.tight_layout()
+            plt.title("seg_pred_2")
+            plt.imshow(seg_pred[..., 2])
             plt.axis("off")
+            
+            # plt.tight_layout()
             plt.show()
         else:
             print("decide to save image.")
-
 
     def var_output(self, i=None, model=None):
         # get rgb_i.png & i_depth.npy

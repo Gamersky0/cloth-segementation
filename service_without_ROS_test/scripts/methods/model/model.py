@@ -17,7 +17,8 @@ class ClothEdgeModel:
         self.predict_angle = predict_angle
         self.model_path = model_path
         self.model_last_updated = os.path.getmtime(self.model_path)
-        self.use_gpu = torch.cuda.is_available()
+        # self.use_gpu = torch.cuda.is_available()
+        self.use_gpu = False
         self.num_gpu = list(range(torch.cuda.device_count()))
         self.crop_dims = crop_dims
 
@@ -71,13 +72,12 @@ class ClothEdgeModel:
         return corners, outer_edges, inner_edges
 
     def predict(self, image):
-        # 切换成评估模式,关闭dropout和batch normalization等
         self.model.eval()
         # N: 获取 Config， 进行图像裁剪，裁剪的标准是什么？(255,243)的图像也需要再裁剪吗？
-        print("image.shape.before: ", image.shape)
-        row_start, row_end, col_start, col_end, step = self.crop_dims
-        image = image[row_start:row_end:step, col_start:col_end:step]
-        print("image.shape.after: ", image.shape)
+        print("In model.predict process, at first, image.shape: ", image.shape)
+        # row_start, row_end, col_start, col_end, step = self.crop_dims
+        # image = image[row_start:row_end:step, col_start:col_end:step]
+        print("In model.predict process, after crop, image.shape: ", image.shape)
 
         # 找到深度图像最大值，将 NAN 也替换成最大值防止出错
         max_d = np.nanmax(image)

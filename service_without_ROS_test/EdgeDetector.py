@@ -1,13 +1,14 @@
 import os
 import cv2
 import numpy as np
-# from pyquaternion import Quaternion as Quat # seems do not need 
 from copy import deepcopy
 from PIL import Image
 import matplotlib.pyplot as plt
 from scripts.methods.groundtruth import GroundTruth # import GroundTruth OK
 from scripts.methods.model.model import ClothEdgeModel # import ClothEdgeModel OK
-from my_utils import DetectEdgeResponse
+from my_utils import *
+from datetime import datetime
+from sklearn.neighbors import KDTree
 
 class EdgeDetector:
     def __init__(self, detection_method, crop_dims, datapath):
@@ -16,7 +17,7 @@ class EdgeDetector:
         self._init_model(crop_dims)
         self.depth_im = None
         self.rgb_im = None
-        print("finish init")
+        print("EdgeDetector finish init")
 
     def _init_model(self, crop_dims):
         if self.detection_method == 'groundtruth':
@@ -35,11 +36,7 @@ class EdgeDetector:
             model_path = "/home/chimy/old_projects/cloth-segmentation-main/runspath/pretrained_weights"
             self.model = ClothEdgeModel(self.crop_dims, grasp_angle_method, model_path)
 
-    def run(self):
-        # set self.depth_im & self.rgb_im, 
-        # i: dataset image index
-        i = 0
-
+    def detect_edge(self, i):
         try:
             rgb_im = Image.open(os.path.join(self.datapath, "rgb_%d.png" % i))
             depth_im = np.load(os.path.join(self.datapath, "%d_depth.npy" % i))
@@ -75,20 +72,52 @@ class EdgeDetector:
         response = DetectEdgeResponse()
         response.rgb_im = self.rgb_im
         response.depth_im = self.depth_im
+        # get response and save images
         if self.detection_method == 'groundtruth':
             pred = self.model.predict(rgb_im)
             # pred = self.model.predict(rgb_im)
             response.prediction = pred
         elif self.detection_method == 'network':
             self.model.update() # Check if model needs to be reloaded
-            print("depth image.shape.at_first: ", depth_im.shape)
+            print("depth_image.shape: ", depth_im.shape)
+            # all numpy.ndarray
             corners, outer_edges, inner_edges, pred = self.model.predict(depth_im)
-            print("use network, might add time later")
+            print("add time later")
+            print("corners.shape:", corners.shape)
+            print("outer_edges.shape:", outer_edges.shape)
+            print("inner_edges.shape:",inner_edges.shape)
+            print("pred.shape:",pred.shape)
 
-if __name__ == '__main__':
-    detection_method = 'network'
-    datapath = "/home/chimy/projects/biyesheji/data_painted_towel"
-    crop_dims = [180, 650, 450, 900, 2]
+            # save prediction 
+            corners_img = get_depth_img(corners)
+            cv2.imwrite('corners_img.png', corners_img)
+            outer_img = get_depth_img(outer_edges)
+            cv2.imwrite('outer_img.png', outer_img)
+            inner_img = get_depth_img(inner_edges)
+            cv2.imwrite('inner_img.png', inner_img)
+            pred_img = get_depth_img(pred)
+            cv2.imwrite('pred_img.png', pred_img)
 
-    e = EdgeDetector(detection_method, crop_dims, datapath)
-    e.run()
+        response.prediction = pred
+        response.corners = corners
+        response.outer_edges = outer_edges
+        response.inner_edges = inner_edges
+        
+        # TYPE_TEST = True
+        # if TYPE_TEST:
+        #     print("response.prediction.type:",response.prediction.type)
+        #     print("response.corners.type:",response.corners.type)
+        #     print("response.outer_edges.type:",response.outer_edges.type)
+        #     print("response.inner_edges.type:",response.inner_edges.type)
+        return response
+
+    def run(self, img_index):
+        # set self.depth_im & self.rgb_im, 
+        # img_index: dataset image index
+        index = img_index
+
+        # DetectEdgeResponse
+        prediction = self.detect_edge(index)
+        
+        return prediction
+    
