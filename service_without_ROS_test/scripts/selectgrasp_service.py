@@ -1,21 +1,4 @@
 #!/usr/bin/env python
-
-# Requese including:
-    # sensor_msgs/Image rgb
-    # sensor_msgs/Image prediction
-    # sensor_msgs/Image corners
-    # sensor_msgs/Image outer_edges
-    # sensor_msgs/Image inner_edges
-# Response including:
-    # int64 py
-    # int64 px
-    # float64 angle
-    # int64 inner_py
-    # int64 inner_px
-    # float64[] var
-    # float64[] angle_x
-    # float64[] angle_y
-
 import matplotlib
 import matplotlib.pyplot as plt
 import os
@@ -499,6 +482,21 @@ class GraspSelector():
             raise NotImplementedError
 
     # callback function
+    # Requese including:
+        # sensor_msgs/Image rgb
+        # sensor_msgs/Image prediction
+        # sensor_msgs/Image corners
+        # sensor_msgs/Image outer_edges
+        # sensor_msgs/Image inner_edges
+    # Response including:
+        # int64 py
+        # int64 px
+        # float64 angle
+        # int64 inner_py
+        # int64 inner_px
+        # float64[] var
+        # float64[] angle_x
+        # float64[] angle_y
     def _server_cb(self, req):
         rospy.loginfo('Received grasp selection request')
         inner_py = None
