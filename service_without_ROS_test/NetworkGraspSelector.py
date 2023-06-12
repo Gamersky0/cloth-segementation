@@ -64,7 +64,7 @@ class NetworkGraspSelector:
             print("No graspable pixels detected")
             return 0, 0, 0, 0, 0
 
-        # Choose outer point? (maybe grasp point) 
+        # Get outer_pt by method
         if self.grasp_point_method == 'policy':
             outer_edges = deepcopy(pred[:, :, 1])
             mask = np.zeros_like(outer_edges)
@@ -124,6 +124,29 @@ class NetworkGraspSelector:
                     # corner pixels
                     xx_o = xx[segmentation[:,:,0]==255]
                     yy_o = yy[segmentation[:,:,0]==255]
+
+                # 思路:将edges和corners分开
+                # edges: 1 grasp point
+                # corners: 2 grasp point
+                    # xx_o和yy_o需要多加一个维度,第一维度代表检测到i个角点
+                # print("xx_o.shape: ", xx_o.shape)
+                # print("xx_o: ", xx_o)
+                corners_pixel = [[0,0]]
+                for j in range(len(xx_o)):
+                    corners_pixel.append([yy_o[j],xx_o[j]])
+                print("corners_pixel.type:", type(corners_pixel))
+                # print(corners_pixel)
+                corner_classes = classify_points(corners_pixel)
+                num_classes = len(corner_classes)
+                print("Number of classes:", num_classes)
+                # print(output)
+                # print("corners_pixel:", corners_pixel)
+                # classes = pixel_classify(corners_pixel)
+                # print(classes)
+
+                # threshold = 1
+                # adj_matrix = get_adjacency_matrix(corners_pixel, threshold)
+                # print(adj_matrix)
 
                 # inner_edge pixels
                 xx_i = xx[segmentation[:,:,2]==255]
@@ -185,6 +208,7 @@ class NetworkGraspSelector:
 
         print("Choose single grasp pixel x:", x, "y:", y)
 
+        # Get inner_pt
         # Get outer_pt and inner_pt for computing grasp angle
         if self.grasp_angle_method == 'inneredge':
             # 计算内边缘到当前像素点的最短距离,并返回距离最近的inner_edge的像素坐标

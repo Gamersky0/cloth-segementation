@@ -73,3 +73,16 @@ def myplot(impred, xx_o, yy_o, var, outer_edges_filt, xx, yy, segmentation):
     cv2.imwrite(os.path.join(tstamp_path, "rgb_%s.png" % tstamp), rgb)
     plt.savefig(os.path.join(tstamp_path, 'uncertainty_%s.png' % tstamp))
     plt.show()
+
+def classify_points(points):
+    classes = []
+    curr_class = []
+    for i in range(len(points)):
+        curr_class.append(points[i])
+        if i == len(points) - 1 or ((points[i][0] == points[i+1][0] and abs(points[i][1] - points[i+1][1]) == 1) or (points[i][1] == points[i+1][1] and abs(points[i][0] - points[i+1][0]) == 1)):
+            if curr_class not in classes:
+                classes.append(curr_class)
+            curr_class = []
+        elif abs(points[i][0] - points[i+1][0]) == 1 and abs(points[i][1] - points[i+1][1]) == 1:
+            curr_class.append(points[i+1])
+    return classes
