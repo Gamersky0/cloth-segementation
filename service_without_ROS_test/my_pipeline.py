@@ -17,25 +17,25 @@ def detect_edge():
     detection_method = 'network'
     datapath = "/home/chimy/projects/biyesheji/data_painted_towel"
     crop_dims = [180, 650, 450, 900, 2] # seems not used yet
-    img_index = 10
+    img_index = 1
 
     e = EdgeDetector(detection_method, crop_dims, datapath)
     prediction = e.run(img_index)
     return prediction
 
 def select_grasp(prediction):
+    # Option: network
     detection_method = "network"
     # Option: random, manual, confidence, policy
     grasp_point_method = "confidence"
     # Option: predict没有写?, inneredge, center
     grasp_angle_method = "inneredge"
-    # grasp_target = "edge"
-    grasp_target = "corner"
+    # Option: corner, edges
+    grasp_target = 'corner'
 
     g = GraspSelector(detection_method, grasp_point_method, grasp_angle_method, prediction, grasp_target)
     grasp = g.run()
     return grasp
-
 
 if __name__ == '__main__':
     print('\033[32m' + '==========================================' + '\033[0m')

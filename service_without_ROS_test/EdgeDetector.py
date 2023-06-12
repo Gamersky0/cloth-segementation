@@ -17,7 +17,7 @@ class EdgeDetector:
         self._init_model(crop_dims)
         self.depth_im = None
         self.rgb_im = None
-        print("EdgeDetector finish init")
+        print("Finish EdgeDetector init.")
 
     def _init_model(self, crop_dims):
         if self.detection_method == 'groundtruth':
@@ -42,7 +42,7 @@ class EdgeDetector:
             depth_im = np.load(os.path.join(self.datapath, "%d_depth.npy" % i))
             max_d = np.nanmax(depth_im)
             depth_im[np.isnan(depth_im)] = max_d
-            print(os.path.join(self.datapath, "%d_depth.npy" % i))
+            print("Input depth_image path:", os.path.join(self.datapath, "%d_depth.npy" % i))
         except FileNotFoundError:
             print("File not found")
         except:
@@ -58,17 +58,6 @@ class EdgeDetector:
         rgb_im = deepcopy(self.rgb_im)  
         depth_im = deepcopy(self.depth_im)
 
-        # plt.figure(dpi=300)
-        # plt.subplot(121)
-        # plt.title("rgb_im")
-        # plt.imshow(rgb_im)
-        # plt.axis("off")
-        # plt.subplot(122)
-        # plt.title("depth_im")
-        # plt.imshow(depth_im)
-        # plt.axis("off")
-        # plt.show()
-
         response = DetectEdgeResponse()
         response.rgb_im = self.rgb_im
         response.depth_im = self.depth_im
@@ -78,15 +67,12 @@ class EdgeDetector:
             # pred = self.model.predict(rgb_im)
             response.prediction = pred
         elif self.detection_method == 'network':
+            print("Detectopm method: network")
             self.model.update() # Check if model needs to be reloaded
-            print("depth_image.shape: ", depth_im.shape)
+            print("Input depth_image.shape: ", depth_im.shape)
             # all numpy.ndarray
             corners, outer_edges, inner_edges, pred = self.model.predict(depth_im)
-            print("add time later")
-            print("corners.shape:", corners.shape)
-            print("outer_edges.shape:", outer_edges.shape)
-            print("inner_edges.shape:",inner_edges.shape)
-            print("pred.shape:",pred.shape)
+            print("Cost time: not add yet")
 
             # save prediction 
             corners_img = get_depth_img(corners)
@@ -98,11 +84,34 @@ class EdgeDetector:
             pred_img = get_depth_img(pred)
             cv2.imwrite('pred_img.png', pred_img)
 
+        ENBALE_DETECT_EDGE_PLOT = True
+        if ENBALE_DETECT_EDGE_PLOT:
+            plt.figure(dpi=300)
+            plt.subplot(141)
+            plt.title("depth_image")
+            plt.imshow(depth_im)
+            plt.axis("off")
+
+            plt.subplot(142)
+            plt.title("corners")
+            plt.imshow(corners)
+            plt.axis("off")
+
+            plt.subplot(143)
+            plt.title("outer_edges")
+            plt.imshow(outer_edges)
+            plt.axis("off")
+
+            plt.subplot(144)
+            plt.title("inner_edges")
+            plt.imshow(inner_edges)
+            plt.axis("off")
+            plt.show()
+
         response.prediction = pred
         response.corners = corners
         response.outer_edges = outer_edges
         response.inner_edges = inner_edges
-        
         # TYPE_TEST = True
         # if TYPE_TEST:
         #     print("response.prediction.type:",response.prediction.type)
@@ -120,4 +129,3 @@ class EdgeDetector:
         prediction = self.detect_edge(index)
         
         return prediction
-    

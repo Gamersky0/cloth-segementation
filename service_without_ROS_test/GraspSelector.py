@@ -73,4 +73,3 @@ class GraspSelector:
 
         # self.selector.plot(pred, px, py, var, None, inner_px, inner_py, prediction.prediction)
         return response
-    
