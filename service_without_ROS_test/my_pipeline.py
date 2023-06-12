@@ -17,7 +17,7 @@ def detect_edge():
     detection_method = 'network'
     datapath = "/home/chimy/projects/biyesheji/data_painted_towel"
     crop_dims = [180, 650, 450, 900, 2] # seems not used yet
-    img_index = 0
+    img_index = 10
 
     e = EdgeDetector(detection_method, crop_dims, datapath)
     prediction = e.run(img_index)

@@ -35,3 +35,41 @@ class SelectGraspResponse:
         self.var = None
         self.angle_x = None
         self.angle_y = None
+
+def myplot(impred, xx_o, yy_o, var, outer_edges_filt, xx, yy, segmentation):
+    """
+    Plot for debugging
+    """
+    impred2 = deepcopy(segmentation)
+    impred2[:, :, 0] = 0
+    fig = plt.figure()
+    ax = plt.subplot(121)
+    empty = np.zeros(impred.shape)
+    ax.imshow(empty)
+    scat = ax.scatter(xx_o, yy_o, c=var, cmap='RdBu', s=3)
+    plt.colorbar(scat)
+    ax.scatter(x, y, c='blue', alpha=0.7)
+    ax = plt.subplot(122)
+    ax.imshow(impred2)
+    
+    # arrow
+    factor = 2
+    xx = xx[outer_edges_filt==0]
+    yy = yy[outer_edges_filt==0]
+    direction_o = direction[segmentation[:,:,1]==255,:]
+    ax.quiver(xx_o[::factor],yy_o[::factor],direction_o[::factor,1]-xx_o[::factor],-direction_o[::factor,0]+yy_o[::factor], color='white', scale=1, scale_units='x')
+
+    base_path = "/home/chimy/projects/biyesheji/cloth-segmentation/service_without_ROS_test"
+    tstamp = datetime.now().strftime("%d_%m_%Y_%H:%M:%S")
+    tstamp_path = os.path.join(base_path, tstamp)
+    os.makedirs(tstamp_path)
+
+    fig.canvas.draw()
+    w,h = fig.canvas.get_width_height()
+    buf = np.fromstring(fig.canvas.tostring_rgb(), dtype=np.uint8).reshape(h, w, 3)
+    np.save(os.path.join(tstamp_path, "plot_%s" % tstamp), buf)
+    
+    rgb = cv2.cvtColor(rgb, cv2.COLOR_BGR2RGB)
+    cv2.imwrite(os.path.join(tstamp_path, "rgb_%s.png" % tstamp), rgb)
+    plt.savefig(os.path.join(tstamp_path, 'uncertainty_%s.png' % tstamp))
+    plt.show()

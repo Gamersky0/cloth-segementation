@@ -6,6 +6,7 @@ from PIL import Image
 import matplotlib.pyplot as plt
 from my_utils import *
 from sklearn.neighbors import KDTree
+from datetime import datetime
 
 class NetworkGraspSelector:
     """
@@ -96,8 +97,10 @@ class NetworkGraspSelector:
                 segmentation[np.logical_and(impred[:,:,1]==255, impred[:,:,2]==255),1] = 0
 
                 inner_edges_filt = np.ones((im_height, im_width))
-
                 inner_edges_filt[segmentation[:,:,2]==255] = 0
+
+                outer_edges_filt = np.ones((im_height, im_width))
+                outer_edges_filt[segmentation[:,:,1]==255] = 0
 
                 # Get outer-inner edge correspondence
                 xx, yy =  np.meshgrid([x for x in range(im_width)],
@@ -160,10 +163,49 @@ class NetworkGraspSelector:
                 idx = np.random.choice(min_idxs)
                 x = xx_o[idx]
                 y = yy_o[idx]
+
+                # myplot(impred, xx_o, yy_o, var, outer_edges_filt, xx, yy, segmentation)
+                ENABLE_PLOT = True
+                if ENABLE_PLOT:
+                    impred2 = deepcopy(segmentation)
+                    impred2[:, :, 0] = 0
+                    fig = plt.figure()
+                    ax = plt.subplot(121)
+                    empty = np.zeros(impred.shape)
+                    ax.imshow(empty)
+                    scat = ax.scatter(xx_o, yy_o, c=var, cmap='RdBu', s=3)
+                    scat = ax.scatter(xx_i, yy_i, c=var, cmap='RdBu', s=3)
+                    plt.colorbar(scat)
+                    ax.scatter(x, y, c='blue', alpha=0.7)
+                    ax = plt.subplot(122)
+                    ax.imshow(impred2)
+                    
+                    # arrow
+                    factor = 2
+                    xx = xx[outer_edges_filt==0]
+                    yy = yy[outer_edges_filt==0]
+                    direction_o = direction[segmentation[:,:,1]==255,:]
+                    ax.quiver(xx_o[::factor],yy_o[::factor],direction_o[::factor,1]-xx_o[::factor],-direction_o[::factor,0]+yy_o[::factor], color='white', scale=1, scale_units='x')
+
+                    base_path = "/home/chimy/projects/biyesheji/cloth-segmentation/service_without_ROS_test"
+                    tstamp = datetime.now().strftime("%d_%m_%Y_%H:%M:%S")
+                    tstamp_path = os.path.join(base_path, tstamp)
+                    os.makedirs(tstamp_path)
+
+                    fig.canvas.draw()
+                    w,h = fig.canvas.get_width_height()
+                    buf = np.fromstring(fig.canvas.tostring_rgb(), dtype=np.uint8).reshape(h, w, 3)
+                    np.save(os.path.join(tstamp_path, "plot_%s" % tstamp), buf)
+                    
+                    rgb = cv2.cvtColor(rgb, cv2.COLOR_BGR2RGB)
+                    cv2.imwrite(os.path.join(tstamp_path, "rgb_%s.png" % tstamp), rgb)
+                    plt.savefig(os.path.join(tstamp_path, 'uncertainty_%s.png' % tstamp))
+                    plt.show()            
             else:
                 raise NotImplementedError
 
-        print("Grasp point method:", self.grasp_point_method, ". Choose pixel x:", x, "y:", y)
+        print("Grasp point method: ", self.grasp_point_method)
+        print("Choose pixel x:", x, "y:", y)
 
         # Get outer_pt and inner_pt for computing grasp angle
         if self.grasp_angle_method == 'inneredge':
@@ -222,13 +264,10 @@ class NetworkGraspSelector:
 
         if v[0] < 0:
             angle = -angle
-
-        # self.selector.plot(pred, px, py, var, None, inner_px, inner_py, prediction.prediction)
-        # self.plot(pred, xx_o, yy_o, var, inner_edges_filt, xx, yy, segmentation)
-
+        
         return outer_pt[0], outer_pt[1], angle, inner_pt[0], inner_pt[1]
-
-    def plot(impred, xx_o, yy_o, var, outer_edges_filt, xx, yy, segmentation):
+    
+    def myplot(impred, xx_o, yy_o, var, outer_edges_filt, xx, yy, segmentation):
         """
         Plot for debugging
         """

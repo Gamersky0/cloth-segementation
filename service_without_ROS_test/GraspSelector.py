@@ -66,10 +66,9 @@ class GraspSelector:
             response.angle_x = angle_x.flatten()
             response.angle_y = angle_y.flatten()
 
-        print("Get grasp selection response")
+        print("Get grasp selection response:")
         print('{:<10} {:<5} {:<10} {:<5}'.format("px:", px, "py:", py))
-        print('{:<10} {} '.format("angle:", angle))
-        print('\033[32m' + str(angle) + '\033[0m')
+        print('\033[32m' + '{:<10} {} '.format("angle:", angle) + '\033[0m')
         print('{:<10} {:<5} {:<10} {:<5}'.format("inner_px:", inner_px, "inner_py:", inner_py))
 
         # self.selector.plot(pred, px, py, var, None, inner_px, inner_py, prediction.prediction)
