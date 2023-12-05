@@ -5,7 +5,8 @@ import os
 import cv2
 # ROS
 import actionlib
-import numpy as npimport actionlib
+import numpy as np
+import actionlib
 from datetime import datetime
 from cv_bridge import CvBridge
 from sensor_msgs.msg import Image

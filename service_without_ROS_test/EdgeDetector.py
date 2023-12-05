@@ -10,7 +10,7 @@ from my_utils import *
 from datetime import datetime
 from sklearn.neighbors import KDTree
 
-class EdgeDetector:
+class EdgeDetector_deprecated:
     def __init__(self, detection_method, crop_dims, datapath):
         self.detection_method = detection_method
         self.datapath = datapath
@@ -38,13 +38,15 @@ class EdgeDetector:
 
     def detect_edge(self, i):
         try:
-            rgb_im = Image.open(os.path.join(self.datapath, "rgb_%d.png" % i))
-            depth_im = np.load(os.path.join(self.datapath, "%d_depth.npy" % i))
+            rgb_im = Image.open("/home/chimy/projects/biyesheji/cloth-segmentation/service_without_ROS_test/my_image/my_rgb_2.png")
+            depth_im = np.load("/home/chimy/projects/biyesheji/cloth-segmentation/service_without_ROS_test/my_image/my_dep_2_normal.npy")            # rgb_im = Image.open(os.path.join(self.datapath, "rgb_%d.png" % i))
+            # rgb_im = Image.open(os.path.join(self.datapath, "rgb_%d.png" % i))
+            # depth_im = np.load(os.path.join(self.datapath, "%d_depth.npy" % i))
             max_d = np.nanmax(depth_im)
             depth_im[np.isnan(depth_im)] = max_d
-            print("Input depth_image path:", os.path.join(self.datapath, "%d_depth.npy" % i))
+            # print("Input depth_image path:", os.path.join(self.datapath, "%d_depth.npy" % i))
         except FileNotFoundError:
-            print("File not found")
+            print("Rgb or Depth image not found")
         except:
             print("Failed to read file")
         
@@ -69,7 +71,8 @@ class EdgeDetector:
         elif self.detection_method == 'network':
             print("Detectopm method: network")
             self.model.update() # Check if model needs to be reloaded
-            print("Input depth_image.shape: ", depth_im.shape)
+            print("Dep_image.shape: ", depth_im.shape)
+            print("Rgb_image.shape: ", rgb_im.shape)
             # all numpy.ndarray
             corners, outer_edges, inner_edges, pred = self.model.predict(depth_im)
             print("Cost time: not add yet")

@@ -29,7 +29,7 @@ def select_grasp(prediction):
     # Option: random, manual, confidence, policy
     grasp_point_method = "confidence"
     # Option: predict没有写?, inneredge, center
-    grasp_angle_method = "inneredge"
+    grasp_angle_method = "center"
     # Option: corner, edges
     grasp_target = 'corner'
 

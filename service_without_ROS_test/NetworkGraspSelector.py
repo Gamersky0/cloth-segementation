@@ -8,7 +8,7 @@ from my_utils import *
 from sklearn.neighbors import KDTree
 from datetime import datetime
 
-class NetworkGraspSelector:
+class NetworkGraspSelector_deprecated:
     """
     Grasp Selector using the output of the cloth region segmentation network
     """
@@ -64,7 +64,7 @@ class NetworkGraspSelector:
             print("No graspable pixels detected")
             return 0, 0, 0, 0, 0
 
-        # Get outer_pt by method
+        # Choose outer point? (maybe grasp point) 
         if self.grasp_point_method == 'policy':
             outer_edges = deepcopy(pred[:, :, 1])
             mask = np.zeros_like(outer_edges)
@@ -124,29 +124,6 @@ class NetworkGraspSelector:
                     # corner pixels
                     xx_o = xx[segmentation[:,:,0]==255]
                     yy_o = yy[segmentation[:,:,0]==255]
-
-                # 思路:将edges和corners分开
-                # edges: 1 grasp point
-                # corners: 2 grasp point
-                    # xx_o和yy_o需要多加一个维度,第一维度代表检测到i个角点
-                # print("xx_o.shape: ", xx_o.shape)
-                # print("xx_o: ", xx_o)
-                corners_pixel = [[0,0]]
-                for j in range(len(xx_o)):
-                    corners_pixel.append([yy_o[j],xx_o[j]])
-                print("corners_pixel.type:", type(corners_pixel))
-                # print(corners_pixel)
-                corner_classes = classify_points(corners_pixel)
-                num_classes = len(corner_classes)
-                print("Number of classes:", num_classes)
-                # print(output)
-                # print("corners_pixel:", corners_pixel)
-                # classes = pixel_classify(corners_pixel)
-                # print(classes)
-
-                # threshold = 1
-                # adj_matrix = get_adjacency_matrix(corners_pixel, threshold)
-                # print(adj_matrix)
 
                 # inner_edge pixels
                 xx_i = xx[segmentation[:,:,2]==255]
@@ -208,7 +185,6 @@ class NetworkGraspSelector:
 
         print("Choose single grasp pixel x:", x, "y:", y)
 
-        # Get inner_pt
         # Get outer_pt and inner_pt for computing grasp angle
         if self.grasp_angle_method == 'inneredge':
             # 计算内边缘到当前像素点的最短距离,并返回距离最近的inner_edge的像素坐标
@@ -285,16 +261,14 @@ class NetworkGraspSelector:
             scat = ax.scatter(xx_o, yy_o, c=var, cmap='RdBu', s=3)
             # scat = ax.scatter(xx_i, yy_i, c=var, cmap='RdBu', s=3)
             # alpha指定散点的透明度,s指定散点的大小
-            ax.scatter(outer_pt[1], outer_pt[0], y, c='blue', alpha=0.7)
-            ax.scatter(inner_pt[1], inner_pt[0], y, c='red', alpha=0.7)
+            ax.scatter(outer_pt[1], outer_pt[0], c='blue', alpha=0.7, s=20)
+            ax.scatter(inner_pt[1], inner_pt[0], c='red', alpha=0.7, s=20)
             ax.quiver(outer_pt[1], outer_pt[0], inner_pt[1] - outer_pt[1], - inner_pt[0] + outer_pt[0])
 
             ax = plt.subplot(144)
             plt.title("empty")
             plt.axis("off")
-            empty = np.zeros(impred.shape)
-            ax.imshow(empty) # 将empty显示在第一个子图中,这里呈现一个白色的矩形
-            scat = ax.scatter(xx_o, yy_o, c=var, cmap='RdBu', s=3)
+            ax.imshow(impred) # 将empty显示在第一个子图中,这里呈现一个白色的矩形
 
             # for arrow plot (not used yet, can't run)
             factor = 2

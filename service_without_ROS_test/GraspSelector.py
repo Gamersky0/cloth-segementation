@@ -12,7 +12,7 @@ from sklearn.neighbors import KDTree
 from NetworkGraspSelector import *
 
 
-class GraspSelector:
+class GraspSelector_deprecated:
     def __init__(self, detection_method, grasp_point_method, grasp_angle_method, img_prediction, grasp_target):
         self.detection_method = detection_method
         self.grasp_point_method = grasp_point_method
